@@ -8,7 +8,7 @@ User = get_user_model()
 
 class PlantsSerializer(serializers.ModelSerializer):
 
-    added_by = CustomUserSerializer
+    added_by = serializers.PrimaryKeyRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
     class Meta:
         model = Plants

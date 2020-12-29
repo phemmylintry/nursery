@@ -4,36 +4,55 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework.authtoken.models import Token
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.authtoken.views import ObtainAuthToken
 from .serializers import CustomUserSerializer, CustomUserLoginSerializer
-from .models import CustomUser
+from django.contrib.auth import get_user_model
+from . import permissions
+User = get_user_model()
 
 # Create your views here.
 
-class UserRegistration(generics.CreateAPIView):
+class UserRegistration(APIView):
     #create user
-    permission_classes = (AllowAny, )
-    serializer_class = CustomUserSerializer
-    queryset  = CustomUser.objects.all()
-
-    def perform_create(self, serializer):
-        user = serializer.save()
-        role = serializer.validated_data['role']
-        user.role = role
-        user.save()
-
-
-class UserLogin(APIView):
-
-    permission_classes = (AllowAny, )
-    serializer_class = CustomUserLoginSerializer
+    permission_classes = (permissions.UserViewsPermissions, )
+    authentication_classes = (TokenAuthentication,)
 
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            context = {
-                "data" : serializer.data,
-                "status" : "User logged in successfully"
-            }
-            return Response(context, status=status.HTTP_200_OK)
+        request = self.request
+        serializer = CustomUserSerializer(data=request.data)
 
-        return Response(serializer_class.data, status=status.HTTP_400_BAD_REQUEST)
+        if serializer.is_valid():
+            user = serializer.save()
+            role = serializer.validated_data['role']
+            user.role = role
+            user.save()
+
+            return Response (
+                {
+                    "status" : "User created successfully",
+                    "token" : Token.objects.create(user=user).key,
+                    "data" : serializer.data
+                },
+                status=status.HTTP_201_CREATED
+            )
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserLogin(ObtainAuthToken):
+
+    serializer_class = CustomUserLoginSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data, context={'request' : request})
+        if serializer.is_valid(raise_exception=True):
+            return Response(
+                {
+                    "status" : "Login successful",
+                    "data" : serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+
+        return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)

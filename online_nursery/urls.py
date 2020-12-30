@@ -15,9 +15,25 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from accounts.permissions import NoPermission
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title = "Online Nursery Market Place",
+        default_version = 'v1',
+        description = "An online nursery marketplace API where users can signup, login, view, and order plants available in different nurseries."
+
+    ),
+    public=True,
+    permission_classes=(NoPermission, ),
+)
 
 
 urlpatterns = [
+    path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swager-ui'),
+    path('documentation/', schema_view.as_view(), {'format' : '.json'}, name='schema-json'),
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('plants/', include('plants.urls')),

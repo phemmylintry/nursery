@@ -19,29 +19,24 @@ class OrderView(generics.CreateAPIView):
         ordered_by = self.request.user
         return serializer.save(ordered_by=ordered_by)
 
-class OrderListView(generics.ListAPIView):
-    queryset = Orders.objects.all()
+class OrderListView(APIView):
     serializer_class = OrderSerializer
     permission_classes = (permissions.LoggedInPermission, permissions.UserIsNurseryPermission)
     authentication_class = (TokenAuthentication, )
     
-    # def get(self, request):
-    #     user = request.user.id
-    #     orders = Orders.objects.filter(nursery=user)
-
-    #     store = {}
+    def get(self, request):
+        user = request.user.id
+        orders = Orders.objects.filter(nursery=user)
         
-    #     for item in orders:
-    #         store['price'] = item.id
-    #         store['plants'] = item.plants
-    #         store['user'] = item.ordered_by_id
+        data = []
         
-    #     print(store)
+        for item in orders:
+            data.append({
+                "Order id" : item.id,
+                "Plants Ordered" : item.plants,
+                "Number of order" : item.number_of_plants_ordered,
+                "Total price" : item.total_price,
+                "Order by" : item.ordered_by_id,
+            })
 
-    #     # data = {
-    #     #     "Plants Ordered" : price,
-    #     #     "Number of order" : plants,
-    #     #     "User" : user
-    #     # }
-
-    #     return Response(data, status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_200_OK)

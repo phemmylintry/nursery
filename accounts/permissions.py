@@ -17,6 +17,11 @@ class UserIsNurseryPermission(permissions.BasePermission):
         if user.role == "nursery":
             return True
 
+class UserIsUserPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        if user.role == "user":
+            return True
 
 class UserViewsPermissions(permissions.BasePermission):
     def has_permission(self, request, view):

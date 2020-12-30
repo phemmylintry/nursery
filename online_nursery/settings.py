@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     #project apps
     'accounts',
     'plants',
+    'orders',
 
     #third party apps
     'rest_framework',

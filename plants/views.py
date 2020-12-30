@@ -14,22 +14,43 @@ from .serializers import PlantsSerializer
 from .models import Plants
 # Create your views here.
 
-class PlantsCreateView(generics.CreateAPIView):
-    serializer_class = PlantsSerializer
+class PlantsCreateView(APIView):
     permission_classes = (permissions.LoggedInPermission, permissions.UserIsNurseryPermission)
     authentication_classes = (TokenAuthentication,)
+    serializer_class = PlantsSerializer
 
-    def perform_create(self, serializer):
-        serializer.save(added_by=self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data, context={'request' : request})
+        
+        if serializer.is_valid():
+            #check if user already has plant in store
+            name = serializer.validated_data['name']
+            user = request.user
+            plants = Plants.objects.filter(added_by=user).filter(name=name).count()
+            
+            if plants != 0:
+                return Response({
+                    "data" : "Plant already in store"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            serializer.validated_data['added_by'] = user
+            serializer.save()
+            
+            return Response({
+                "data" : serializer.data
+            })
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PlantsDetailView(generics.RetrieveAPIView):
     queryset = Plants.objects.all()
     serializer_class = PlantsSerializer
-    permission_classes = (permissions.LoggedInPermission, )
+    permission_classes = (permissions.LoggedInPermission, permissions.UserIsUserPermission)
 
 
 class PlantsListView(generics.ListAPIView):
     queryset = Plants.objects.all()
     serializer_class = PlantsSerializer
-    permission_classes = (permissions.LoggedInPermission, )
+    permission_classes = (permissions.LoggedInPermission, permissions.UserIsUserPermission)

@@ -12,6 +12,8 @@ from accounts import permissions
 from accounts.models import CustomUser
 from .serializers import PlantsSerializer
 from .models import Plants
+
+from drf_yasg.utils import swagger_auto_schema
 # Create your views here.
 
 class PlantsCreateView(APIView):
@@ -19,6 +21,10 @@ class PlantsCreateView(APIView):
     authentication_classes = (TokenAuthentication,)
     serializer_class = PlantsSerializer
 
+    @swagger_auto_schema(
+        request_body=PlantsSerializer,
+        operation_description="Add a plant to nursery",
+    )
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'request' : request})
@@ -48,6 +54,7 @@ class PlantsDetailView(generics.RetrieveAPIView):
     queryset = Plants.objects.all()
     serializer_class = PlantsSerializer
     permission_classes = (permissions.LoggedInPermission, permissions.UserIsUserPermission)
+
 
 
 class PlantsListView(generics.ListAPIView):

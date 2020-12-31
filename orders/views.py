@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework import generics
 from .models import Orders
 from plants.models import Plants
-
+from drf_yasg.utils import swagger_auto_schema
 from .serializers import OrderSerializer
 from accounts import permissions
 
@@ -14,6 +14,11 @@ class OrderView(generics.CreateAPIView):
     serializer_class = OrderSerializer
     permission_classes = (permissions.LoggedInPermission, permissions.UserIsUserPermission)
     authentication_class = (TokenAuthentication, )
+
+    @swagger_auto_schema(
+        request_body=OrderSerializer,
+        operation_description="Order for a plant",
+    )
 
     def perform_create(self, serializer):
         ordered_by = self.request.user

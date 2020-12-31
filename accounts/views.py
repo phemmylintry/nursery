@@ -9,14 +9,22 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from .serializers import CustomUserSerializer, CustomUserLoginSerializer
 from django.contrib.auth import get_user_model
 from . import permissions
+from drf_yasg.utils import swagger_auto_schema
+
 User = get_user_model()
 
 # Create your views here.
 
 class UserRegistration(APIView):
+
     #create user
     permission_classes = (permissions.UserViewsPermissions, )
     authentication_classes = (TokenAuthentication,)
+    
+    @swagger_auto_schema(
+        request_body = CustomUserSerializer,
+        operation_description="Create a user",
+    )
 
     def post(self, request):
         request = self.request
